@@ -15,7 +15,17 @@ namespace VoiceMap_API.AppDbContext
         }
 
         public DbSet<Users> Users { get; set; }
-        public DbSet<UserProfile> UserProfiles { get; set; }
+        public DbSet<UserProfiles> UserProfiles { get; set; }
         public DbSet<UserVerification> UserVerification { get; set; }
+        public DbSet<UserSecuritySettings> UserSecuritySettings { get; set; }
+        public DbSet<UserLoginLogs> UserLoginLogs { get; set; }
+        public DbSet<ExpertiseType> ExpertiseType { get; set; }
+        public DbSet<ProfileType> ProfileType { get; set; }
+        public DbSet<ReactionTypes> ReactionTypes { get; set; }
+        public DbSet<Posts> Posts { get; set; }
+        public DbSet<PostCategories> PostCategories { get; set; }
+        public DbSet<Friendships> Friendships { get; set; }
+        public DbSet<PostComments> PostComments { get; set; }
+        public DbSet<PostReactions> PostReactions { get; set; }
     }
 }

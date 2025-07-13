@@ -9,6 +9,7 @@ namespace VoiceMap_API.Repositories.Interface
     {
         Task<string> UserVerification(int userID);
         Task<int> OtpVerification(string otp, int UserId);
-        Task<string> ResendOtp(int UserId);
+        Task<string> ResendOtp(int UserId); 
+        Task DeleteOtpRecord(int UserId, string otp);
     }
 }

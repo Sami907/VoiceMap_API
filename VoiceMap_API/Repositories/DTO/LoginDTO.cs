@@ -5,10 +5,11 @@ using System.Threading.Tasks;
 
 namespace VoiceMap_API.Repositories.DTO
 {
-    public class UserDTO
+    public class LoginDTO
     {
         public string Email { get; set; }
-        public string PasswordHash { get; set; }
+        public string Password { get; set; }
         public string ipAddress { get; set; }
+        public string deviceInfo { get; set; }
     }
 }

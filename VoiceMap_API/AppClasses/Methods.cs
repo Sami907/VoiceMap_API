@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -6,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Net.Mime;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -18,6 +20,7 @@ namespace VoiceMap_API.AppClasses
         private static readonly byte[] IV2 = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16 };
         static string passphrase = "pass@HGjF8xN0f7W2X";
         private const string secretKey = "mLvcPoWKSTQi1fCiqqCrpBvd3mTTvvzB";
+     
         public static string HashPassword(string password)
         {
             using (SHA256 sha256 = SHA256.Create())
@@ -29,7 +32,7 @@ namespace VoiceMap_API.AppClasses
                 StringBuilder builder = new StringBuilder();
                 foreach (var b in hash)
                 {
-                    builder.Append(b.ToString("x2")); 
+                    builder.Append(b.ToString("x2"));
                 }
 
                 return builder.ToString();
@@ -40,7 +43,7 @@ namespace VoiceMap_API.AppClasses
         {
             using (var rng = new RNGCryptoServiceProvider())
             {
-                byte[] randomBytes = new byte[4]; 
+                byte[] randomBytes = new byte[4];
                 rng.GetBytes(randomBytes);
 
                 byte[] userIdBytes = BitConverter.GetBytes(userId);
@@ -96,7 +99,7 @@ namespace VoiceMap_API.AppClasses
 
             await cryptoStream.WriteAsync(Encoding.Unicode.GetBytes(clearText));
 
-            cryptoStream.FlushFinalBlock(); 
+            cryptoStream.FlushFinalBlock();
 
             return output.ToArray();
         }
@@ -116,7 +119,7 @@ namespace VoiceMap_API.AppClasses
             return pbkdf2.GetBytes(desiredKeyLength);
         }
 
-        public static string GenerateJwtToken(string userName, string email, string userType)
+        public static string GenerateJwtToken(string Id)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(secretKey);
@@ -124,8 +127,7 @@ namespace VoiceMap_API.AppClasses
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                new Claim(ClaimTypes.Name, userName),
-                new Claim(ClaimTypes.Email, email)
+                    new Claim(ClaimTypes.Sid, Id)
                 }),
                 Expires = DateTime.UtcNow.AddHours(12),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -171,6 +173,81 @@ namespace VoiceMap_API.AppClasses
             };
 
             await smtpClient.SendMailAsync(message);
+        }
+
+        public static async Task SendEmailWithAttachment(string toEmail, string subject, string htmlMessage, Stream? attachmentStream = null, string attachmentName = "Attachment.txt")
+        {
+            var message = new MailMessage
+            {
+                From = new MailAddress("ssam70207@gmail.com"),
+                Subject = subject,
+                Body = htmlMessage,
+                IsBodyHtml = true
+            };
+            message.To.Add(toEmail);
+
+            if (attachmentStream != null)
+            {
+                attachmentStream.Position = 0;
+
+                var attachment = new Attachment(attachmentStream, attachmentName, MediaTypeNames.Text.Plain);
+                message.Attachments.Add(attachment);
+            }
+
+            using var smtpClient = new SmtpClient("smtp.gmail.com")
+            {
+                Port = 587,
+                Credentials = new NetworkCredential("ssam70207@gmail.com", "dyca cuov slvy oceu"),
+                EnableSsl = true
+            };
+
+            await smtpClient.SendMailAsync(message);
+        }
+
+        public static bool IsHexString(string input)
+        {
+            return input.All(c => "0123456789abcdefABCDEF".Contains(c));
+        }
+
+        public static async Task<string> UploadFileAsync(IFormFile file, string folderName, string rootDirectory = "wwwroot")
+        {
+            if (file == null || file.Length == 0)
+            {
+                return null;
+            }
+
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), rootDirectory, folderName);
+
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            var filePath = Path.Combine(folderPath, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return Path.Combine($"/{folderName}", fileName).Replace("\\", "/");
+        }
+
+        public static string GenerateSecretKey()
+        {
+            const string chars = "g6zjcJcgE9HQPeSQwJJreAuhGAUvkE2M5vp1v68Ktddb70mKdDC9kmHj4mXGr0x";
+            var random = new Random();
+            var sb = new StringBuilder();
+
+            for (int i = 0; i < 15; i++)
+            {
+                int index = random.Next(chars.Length);
+                sb.Append(chars[index]);
+            }
+
+            return sb.ToString(); 
         }
     }
 }

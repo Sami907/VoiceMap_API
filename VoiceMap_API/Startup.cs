@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using VoiceMap_API.Repositories;
 using VoiceMap_API.Repositories.Interface;
+using AutoMapper;
+using VoiceMap_API.Models;
 
 namespace VoiceMap_API
 {
@@ -32,14 +34,24 @@ namespace VoiceMap_API
             });
 
             services.AddControllers();
-
+            services.AddAutoMapper(typeof(Startup));
             services.AddSwaggerGen();
 
             services.AddDbContext<AppDbContext.AppDbContext>(options =>
             options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
-
+            services.AddHttpContextAccessor();
             services.AddScoped<ISignUp, SignUpRepo>();
             services.AddScoped<IUserVerification, UserVerificationRepo>();
+            services.AddScoped<IUserLoginLogs, UserLoginLogsRepo>();
+            services.AddScoped<IExpertiseType, ExpertiseTypeRepo>();
+            services.AddScoped<IProfileType, ProfileTypeRepo>();
+            services.AddScoped<IUserProfiles, UserProfilesRepo>();
+            services.AddScoped<IUserSecuritySettings, UserSecuritySettingsRepo>();
+            services.AddScoped<IReactionTypes, ReactionTypesRepo>();
+            services.AddScoped<IPosts, PostRepo>();
+            services.AddScoped<IPostCategories, PostCategoriesRepo>();
+            services.AddScoped<IPostReactions, PostReactionsRepo>();
+            services.AddScoped<IPostComments, PostCommentsRepo>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

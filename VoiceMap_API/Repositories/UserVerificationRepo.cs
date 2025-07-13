@@ -51,8 +51,8 @@ namespace VoiceMap_API.Repositories
                     return 2;
                 }
 
-                // OTP expired → older than 24 hours
-                if ((DateTime.UtcNow - user.CreatedAt).TotalHours > 24)
+                // OTP expired → older than 1 minute
+                if ((DateTime.UtcNow - user.CreatedAt).TotalSeconds > 60)
                 {
                     return 1;
                 }
@@ -83,5 +83,16 @@ namespace VoiceMap_API.Repositories
             return "";
         }
 
+        public async Task DeleteOtpRecord(int UserId, string otp)
+        {
+            var userVer = await _context.UserVerification.FirstOrDefaultAsync(u => u.UserId == UserId && u.RandomKey == otp);
+
+            if (userVer != null)
+            {
+                _context.Remove(userVer);
+                await _context.SaveChangesAsync();
+            }
+        }
+        
     }
 }
