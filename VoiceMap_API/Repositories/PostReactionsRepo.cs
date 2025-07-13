@@ -31,7 +31,7 @@ namespace VoiceMap_API.Repositories
             if (existingReaction != null)
             {
                 existingReaction.ReactionTypeId = reactionId;
-                existingReaction.reactedAt = DateTime.UtcNow;
+                existingReaction.reactedAt = DateTime.Now;
                 _context.PostReactions.Update(existingReaction);
             }
             else

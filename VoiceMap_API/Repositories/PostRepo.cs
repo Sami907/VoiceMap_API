@@ -37,10 +37,6 @@ namespace VoiceMap_API.Repositories
                .ToListAsync();
 
             var posts = await _context.Posts
-                .Where(p =>
-                    p.Privacy == "public" ||
-                    (p.Privacy == "friends" && friendIds.Contains(p.userId))
-                )
                 .OrderByDescending(p => p.PostTime)
                 .Select(p => new
                 {
@@ -155,7 +151,8 @@ namespace VoiceMap_API.Repositories
                         Text = c.CommentText,
                         Avatar = commentAuthors.ContainsKey(c.AuthorId) && commentAuthors[c.AuthorId].ProfilePictureUrl != null
                         ? $"{scheme}://{host}/User/ProfilePictures/{Path.GetFileName(commentAuthors[c.AuthorId].ProfilePictureUrl)}"
-                        : null
+                        : null,
+                        AuthorId = c.AuthorId
                     }).ToList(),
 
                 Reactions = allReactions
@@ -174,7 +171,8 @@ namespace VoiceMap_API.Repositories
                 Likes = allReactions.Count(r => r.PostId == p.Id),
                 Liked = allReactions.Any(r => r.PostId == p.Id && r.UserId == userId),
                 NewComment = "",
-                ShowComments = false
+                ShowComments = false,
+                UserId = p.userId
             }).ToList();
 
             return finalPosts;

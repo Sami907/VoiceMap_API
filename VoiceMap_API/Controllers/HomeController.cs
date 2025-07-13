@@ -985,7 +985,53 @@ namespace VoiceMap_API.Controllers
                 response.IsSuccess = true;
                 response.Result = result;
                 response.Count = System.Linq.Enumerable.Count(result);
-                response.Messages = new List<string> { "comments added.." };
+                response.Messages = new List<string> { "comment added.." };
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.ErrorMessages = new List<string> { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpPut("updateNGetComments")]
+        public async Task<ActionResult<APIResponse>> UpdateComment(long postId, long commentId, string commentText)
+        {
+            var response = new APIResponse();
+            try
+            {
+                var result = await _postComments.UpdateNGetComments(postId, commentId, commentText);
+                response.IsSuccess = true;
+                response.Result = result;
+                response.Count = System.Linq.Enumerable.Count(result);
+                response.Messages = new List<string> { "comment updated.." };
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.ErrorMessages = new List<string> { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpDelete("deleteNGetComments")]
+        public async Task<ActionResult<APIResponse>> DeleteComment(long postId, long commentId)
+        {
+            var response = new APIResponse();
+            try
+            {
+                var result = await _postComments.DeleteNGetComments(postId, commentId);
+                response.IsSuccess = true;
+                response.Result = result;
+                response.Count = System.Linq.Enumerable.Count(result);
+                response.Messages = new List<string> { "comment deleted.." };
             }
             catch (Exception ex)
             {
