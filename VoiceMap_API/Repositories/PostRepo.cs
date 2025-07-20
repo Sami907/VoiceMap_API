@@ -177,5 +177,23 @@ namespace VoiceMap_API.Repositories
 
             return finalPosts;
         }
+
+        public async Task<bool> DeletePostWithDependencies(long postId)
+        {
+            var post = await _context.Posts.FindAsync(postId);
+            if (post == null)
+                return false;
+
+            var relatedComments = _context.PostComments.Where(c => c.PostId == postId);
+            _context.PostComments.RemoveRange(relatedComments);
+
+            var relatedReactions = _context.PostReactions.Where(r => r.PostId == postId);
+            _context.PostReactions.RemoveRange(relatedReactions);
+
+            _context.Posts.Remove(post);
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

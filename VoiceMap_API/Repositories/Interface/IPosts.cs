@@ -10,5 +10,6 @@ namespace VoiceMap_API.Repositories.Interface
     {
         Task SavePost(Posts posts);
         Task<IEnumerable<dynamic>> GetFeed(int userId);
+        Task <bool> DeletePostWithDependencies(long postId);
     }
 }

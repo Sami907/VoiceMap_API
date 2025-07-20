@@ -1043,5 +1043,27 @@ namespace VoiceMap_API.Controllers
 
             return Ok(response);
         }
+
+        [HttpDelete("deletePostWithDependencies")]
+        public async Task<ActionResult<APIResponse>> DeletePost(long postId)
+        {
+            var response = new APIResponse();
+            try
+            {
+                bool result = await _posts.DeletePostWithDependencies(postId);
+                response.IsSuccess = true;
+                response.Result = result;
+                response.Messages = new List<string> { "post deleted.." };
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.ErrorMessages = new List<string> { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            }
+
+            return Ok(response);
+        }
     }
 }
