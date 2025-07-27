@@ -1065,5 +1065,28 @@ namespace VoiceMap_API.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("getProfileById")]
+        public async Task<ActionResult<APIResponse>> UserProfileById(int userId)
+        {
+            var response = new APIResponse();
+
+            try
+            {
+                var profileRecord = await _IUProfiles.GetUserProfileById(userId);
+                response.IsSuccess = true;
+                response.Result = profileRecord;
+                response.Messages = new List<string> { "successfully get." };
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.ErrorMessages = new List<string> { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            }
+
+            return Ok(response);
+        }
     }
 }
