@@ -9,7 +9,8 @@ namespace VoiceMap_API.Repositories.Interface
 {
     public interface IUserProfiles
     {
-        Task<dynamic> SaveProfileAsync(UserProfiles up);
-        Task<dynamic> GetUserProfileById(long userId);
+        Task <dynamic> SaveProfileAsync(UserProfiles up);
+        Task <dynamic> GetUserProfileById(long userId);
+        Task <dynamic> UpdateProfilePhoto(UpdatePhotoDTO dto);
     }
 }

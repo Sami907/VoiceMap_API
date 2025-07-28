@@ -29,8 +29,9 @@ namespace VoiceMap_API
                     {
                         builder.WithOrigins("http://localhost:4200")
                                .AllowAnyMethod()
-                               .AllowAnyHeader();
-                    });
+                               .AllowAnyHeader()
+                                .AllowCredentials();
+            });
             });
 
             services.AddControllers();
@@ -74,6 +75,8 @@ namespace VoiceMap_API
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseStaticFiles();
 
             app.UseEndpoints(endpoints =>
             {
