@@ -59,5 +59,35 @@ namespace VoiceMap_API.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, response);
             }
         }
+
+        [HttpPut("updateUserInfo")]
+        public async Task<ActionResult<APIResponse>> UpdateUser(UpdateUserProfileInfoDTO profileDTO)
+        {
+            var response = new APIResponse();
+
+            try
+            {
+                var isUpdated = await _IUProfiles.UpdateProfileInfo(profileDTO);
+
+                if (!isUpdated)
+                {
+                    response.IsSuccess = false;
+                    response.Messages = new List<string> { "User not found or update failed." };
+                    return NotFound(response);
+                }
+
+                response.Result = isUpdated;
+                response.IsSuccess = true;
+                response.Messages = new List<string> { "Profile updated successfully." };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.ErrorMessages = new List<string> { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            }
+        }
     }
 }

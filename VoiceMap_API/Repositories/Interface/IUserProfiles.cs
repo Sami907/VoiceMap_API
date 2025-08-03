@@ -12,5 +12,6 @@ namespace VoiceMap_API.Repositories.Interface
         Task <dynamic> SaveProfileAsync(UserProfiles up);
         Task <dynamic> GetUserProfileById(long userId);
         Task <dynamic> UpdateProfilePhoto(UpdatePhotoDTO dto);
+        Task<bool> UpdateProfileInfo(UpdateUserProfileInfoDTO dto);
     }
 }

@@ -36,6 +36,9 @@ namespace VoiceMap_API.Repositories
 
             var result = await (from user in _context.UserProfiles
                                 where user.UserId == userId
+                                join u in _context.Users on user.UserId equals u.Id
+                                where user.UserId == userId && u.IsDeleted == false && u.IsActivated == true
+
                                 join profileType in _context.ProfileType on user.ProfileTypeId equals profileType.id into pt
                                 from profileType in pt.DefaultIfEmpty()
 
@@ -51,7 +54,11 @@ namespace VoiceMap_API.Repositories
                                     ProfileType = profileType != null ? profileType.Name : null,
                                     Expertise = expertise != null ? expertise.Name : null,
                                     user.ProfilePictureUrl,
-                                    user.CoverImageUrl
+                                    user.CoverImageUrl,
+                                    user.ProfileTypeId,
+                                    user.ExpertiseId,
+                                    user.LivesIn,
+                                    user.From
                                 }).FirstOrDefaultAsync();
 
             if (result == null)
@@ -74,7 +81,11 @@ namespace VoiceMap_API.Repositories
                 ProfileType = result.ProfileType,
                 Expertise = result.Expertise,
                 ProfilePictureUrl = profilePic,
-                CoverImageUrl = coverPic
+                CoverImageUrl = coverPic,
+                result.ProfileTypeId,
+                result.ExpertiseId,
+                result.LivesIn,
+                result.From
             };
         }
 
@@ -134,6 +145,30 @@ namespace VoiceMap_API.Repositories
             userProfile.ProfilePictureUrl = profilePic;
 
             return userProfile;
+        }
+
+        public async Task<bool> UpdateProfileInfo(UpdateUserProfileInfoDTO dto)
+        {
+            var existUser = await _context.Users.Where(w => w.Id == dto.UserId && w.IsActivated == true && w.IsDeleted == false).FirstOrDefaultAsync();
+           
+            if (existUser == null)
+                return false;
+
+            var userProfile = await _context.UserProfiles.Where(w => w.UserId == dto.UserId).FirstOrDefaultAsync();
+
+            if (userProfile == null)
+                return false;
+
+            userProfile.Bio = dto.Bio;
+            userProfile.ProfileTypeId = dto.ProfileTypeId;
+            userProfile.ExpertiseId = dto.ExpertiseId;
+            userProfile.Gender = dto.Gender;
+            userProfile.LivesIn = dto.country;
+            userProfile.From = dto.city;
+
+            _context.UserProfiles.Update(userProfile);
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }
