@@ -930,12 +930,12 @@ namespace VoiceMap_API.Controllers
 
         //Feed API
         [HttpGet("getFeed")]
-        public async Task<ActionResult<APIResponse>> GetFeed(int userId)
+        public async Task<ActionResult<APIResponse>> GetFeed(int userId, bool applyIdFilter)
         {
             var response = new APIResponse();
             try
             {
-                var result = await _posts.GetFeed(userId);
+                var result = await _posts.GetFeed(userId, applyIdFilter);
                 response.IsSuccess = true;
                 response.Result = result;
                 response.Messages = new List<string> { "fetching.." };

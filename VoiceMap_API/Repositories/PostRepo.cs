@@ -26,17 +26,29 @@ namespace VoiceMap_API.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<dynamic>> GetFeed(int userId)
+        public async Task<IEnumerable<dynamic>> GetFeed(int userId, bool applyIdFilter)
         {
             var scheme = _httpContextAccessor.HttpContext.Request.Scheme;
             var host = _httpContextAccessor.HttpContext.Request.Host.Value;
+            var postsQuery = _context.Posts.AsQueryable();
 
-            var friendIds = await _context.Friendships
-               .Where(f => (f.RequesterId == userId || f.ReceiverId == userId) && f.Status == "accepted")
-               .Select(f => f.RequesterId == userId ? f.ReceiverId : f.RequesterId)
-               .ToListAsync();
+            if (applyIdFilter)
+            {
+                postsQuery = postsQuery.Where(p => p.userId == userId);
+            }
+            //else
+            //{
+            //    var friendIds = await _context.Friendships
+            //        .Where(f => (f.RequesterId == userId || f.ReceiverId == userId) && f.Status == "accepted")
+            //        .Select(f => f.RequesterId == userId ? f.ReceiverId : f.RequesterId)
+            //        .ToListAsync();
 
-            var posts = await _context.Posts
+            //    friendIds.Add(userId);
+
+            //    postsQuery = postsQuery.Where(p => friendIds.Contains(p.userId));
+            //}
+
+            var posts = await postsQuery
                 .OrderByDescending(p => p.PostTime)
                 .Select(p => new
                 {
