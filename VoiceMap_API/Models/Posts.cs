@@ -17,5 +17,6 @@ namespace VoiceMap_API.Models
         public decimal latitude { get; set; }
         public decimal longitude { get; set; }
         public DateTime PostTime { get; set; } = DateTime.Now;
+        public string PostUrl { get; set; }
     }
 }

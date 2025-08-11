@@ -33,11 +33,12 @@ namespace VoiceMap_API.Controllers
         private readonly IPostCategories _postCategories;
         private readonly IPostReactions _postReactions;
         private readonly IPostComments _postComments;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         protected APIResponse _response;
         public HomeController(ISignUp SignUpRepository,IUserVerification userVerification, IUserLoginLogs userLoginLogs,IUserProfiles userProfiles,
             IMapper mapper,IExpertiseType expertiseType,IProfileType profileType,IUserSecuritySettings userSecuritySettings, IReactionTypes reactionTypes,
-            IPosts posts,IPostCategories postCategories,IPostReactions postReactions,IPostComments postComments)
+            IPosts posts,IPostCategories postCategories,IPostReactions postReactions,IPostComments postComments, IHttpContextAccessor httpContextAccessor)
         {
             _SignUpRepository = SignUpRepository;
             _IUserVerification = userVerification;
@@ -52,6 +53,7 @@ namespace VoiceMap_API.Controllers
             _postCategories = postCategories;
             _postReactions = postReactions;
             _postComments = postComments;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpPost("saveUser")]
@@ -889,6 +891,8 @@ namespace VoiceMap_API.Controllers
                 post.VoiceUrl = voice;
                 post.PostTime = DateTime.Now;
 
+                post.PostUrl = Methods.GeneratePostUrl();
+
                 await _posts.SavePost(post);
 
                 response.IsSuccess = true;
@@ -1089,6 +1093,49 @@ namespace VoiceMap_API.Controllers
             return Ok(response);
         }
 
-        
+        [HttpGet("getPostbyUrl")]
+        public async Task<ActionResult<APIResponse>> PostByUrl(int userId, string url)
+        {
+            var response = new APIResponse();
+            try
+            {
+                string fullUrl = Methods.GetOrigin() + url;
+                var result = await _posts.GetPostByPostUrl(fullUrl, userId);
+                response.IsSuccess = true;
+                response.Result = result;
+                response.Messages = new List<string> { "success" };
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.ErrorMessages = new List<string> { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpGet("getPostbyCategory")]
+        public async Task<ActionResult<APIResponse>> PostByCategory(int userId, int categoryId)
+        {
+            var response = new APIResponse();
+            try
+            {
+                var result = await _posts.GetPostByCategory(categoryId, userId);
+                response.IsSuccess = true;
+                response.Result = result;
+                response.Messages = new List<string> { "success" };
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.ErrorMessages = new List<string> { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            }
+
+            return Ok(response);
+        }
     }
 }

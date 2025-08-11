@@ -249,5 +249,32 @@ namespace VoiceMap_API.AppClasses
 
             return sb.ToString(); 
         }
+
+        private static string GenerateRandomString(int length)
+        {
+            Random random = new Random();
+
+            const string chars = "yzNlAKLrB8Ak0IwPzxZqC70i8lvxuc4IMuC3k9qM7QHpLBWKVeAyFrXI43pOw9JzSDWDQw";
+            char[] stringChars = new char[length];
+
+            for (int i = 0; i < length; i++)
+            {
+                stringChars[i] = chars[random.Next(chars.Length)];
+            }
+
+            return new string(stringChars);
+        }
+
+        public static string GetOrigin()
+        {
+            return "http://localhost:4200";
+        }
+        public static string GeneratePostUrl()
+        {
+            string origin = GetOrigin();
+            string datePart = DateTime.Now.ToString("yyyyMMdd");
+            string randomPart = GenerateRandomString(8);
+            return $"{origin}/main/{datePart}{randomPart}";
+        }
     }
 }

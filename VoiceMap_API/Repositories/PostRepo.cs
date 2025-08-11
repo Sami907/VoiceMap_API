@@ -28,25 +28,26 @@ namespace VoiceMap_API.Repositories
 
         public async Task<IEnumerable<dynamic>> GetFeed(int userId, bool applyIdFilter)
         {
-            var scheme = _httpContextAccessor.HttpContext.Request.Scheme;
-            var host = _httpContextAccessor.HttpContext.Request.Host.Value;
             var postsQuery = _context.Posts.AsQueryable();
 
             if (applyIdFilter)
             {
                 postsQuery = postsQuery.Where(p => p.userId == userId);
             }
-            //else
-            //{
-            //    var friendIds = await _context.Friendships
-            //        .Where(f => (f.RequesterId == userId || f.ReceiverId == userId) && f.Status == "accepted")
-            //        .Select(f => f.RequesterId == userId ? f.ReceiverId : f.RequesterId)
-            //        .ToListAsync();
+            return await GetPostsByQuery(postsQuery, userId);
+        }
 
-            //    friendIds.Add(userId);
+        private async Task<IEnumerable<dynamic>> GetPostsByQuery(IQueryable<Posts> postsQuery, int userId)
+        {
+            var scheme = _httpContextAccessor.HttpContext.Request.Scheme;
+            var host = _httpContextAccessor.HttpContext.Request.Host.Value;
 
-            //    postsQuery = postsQuery.Where(p => friendIds.Contains(p.userId));
-            //}
+            var validUserIds = await (from user in _context.UserProfiles
+                                      join u in _context.Users on user.UserId equals u.Id
+                                      where u.IsDeleted == false && u.IsActivated == true
+                                      select user.UserId).ToListAsync();
+
+            postsQuery = postsQuery.Where(p => validUserIds.Contains(p.userId));
 
             var posts = await postsQuery
                 .OrderByDescending(p => p.PostTime)
@@ -59,7 +60,8 @@ namespace VoiceMap_API.Repositories
                     p.PostTime,
                     p.tagLocation,
                     p.categoryId,
-                    p.userId
+                    p.userId,
+                    p.PostUrl
                 })
                 .ToListAsync();
 
@@ -134,12 +136,12 @@ namespace VoiceMap_API.Repositories
                 Content = p.Content,
                 ImageUrl = p.PostImageUrl != null ? $"{scheme}://{host}/User/PostImages/{Path.GetFileName(p.PostImageUrl)}" : null,
                 VoiceUrl = p.VoiceUrl != null ? $"{scheme}://{host}/User/Voices/{Path.GetFileName(p.VoiceUrl)}" : null,
-                Time = p.PostTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fff") + "Z" ,
+                Time = p.PostTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fff") + "Z",
                 LocationTag = p.tagLocation,
                 Category = postCategories.ContainsKey(p.categoryId)
                 ? postCategories[p.categoryId].Name
                 : "Unknown",
-    
+
                 CategoryIcon = postCategories.ContainsKey(p.categoryId)
                 ? postCategories[p.categoryId].IconUrl
                 : null,
@@ -184,7 +186,8 @@ namespace VoiceMap_API.Repositories
                 Liked = allReactions.Any(r => r.PostId == p.Id && r.UserId == userId),
                 NewComment = "",
                 ShowComments = false,
-                UserId = p.userId
+                UserId = p.userId,
+                postUrl = p.PostUrl
             }).ToList();
 
             return finalPosts;
@@ -206,6 +209,21 @@ namespace VoiceMap_API.Repositories
 
             await _context.SaveChangesAsync();
             return true;
+        }
+        public async Task<dynamic> GetPostByPostUrl(string postUrl, int userId)
+        {
+            var postsQuery = _context.Posts.Where(p => p.PostUrl == postUrl);
+            var posts = await GetPostsByQuery(postsQuery, userId);
+
+            return posts.FirstOrDefault();
+        }
+
+        public async Task<dynamic> GetPostByCategory(int categoryId, int userId)
+        {
+            var postsQuery = _context.Posts.Where(p => p.categoryId == categoryId);
+            var posts = await GetPostsByQuery(postsQuery, userId);
+
+            return posts.FirstOrDefault();
         }
     }
 }
