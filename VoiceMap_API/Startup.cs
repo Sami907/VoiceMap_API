@@ -53,6 +53,7 @@ namespace VoiceMap_API
             services.AddScoped<IPostCategories, PostCategoriesRepo>();
             services.AddScoped<IPostReactions, PostReactionsRepo>();
             services.AddScoped<IPostComments, PostCommentsRepo>();
+            services.AddScoped<INotifications, NotificationRepo>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
