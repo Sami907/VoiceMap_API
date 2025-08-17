@@ -20,5 +20,7 @@ namespace VoiceMap_API.Repositories.DTO
         public int ProfileTypeId { get; set; }
         public int ExpertiseId { get; set; }
         public DateTime CreatedAt { get; set; }
+        public decimal latitude { get; set; }
+        public decimal longitude { get; set; }
     }
 }

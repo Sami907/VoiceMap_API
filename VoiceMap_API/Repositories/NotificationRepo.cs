@@ -58,6 +58,7 @@ namespace VoiceMap_API.Repositories
                 PostId = n.post_id,
                 PostUrl = posts[n.post_id.Value].PostUrl,
                 typeId = n.typId,
+                commentId = n.comment_id,
                 ReactorUser = users.ContainsKey(n.reactor_user_id) ? new
                 {
                     Id = n.reactor_user_id,

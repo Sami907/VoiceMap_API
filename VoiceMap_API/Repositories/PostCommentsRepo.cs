@@ -14,10 +14,12 @@ namespace VoiceMap_API.Repositories
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly AppDbContext.AppDbContext _context;
-        public PostCommentsRepo(AppDbContext.AppDbContext context, IHttpContextAccessor httpContextAccessor)
+        private readonly INotifications _Inotification;
+        public PostCommentsRepo(AppDbContext.AppDbContext context, IHttpContextAccessor httpContextAccessor, INotifications Inotification)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
+            _Inotification = Inotification;
         }
 
         private async Task<List<dynamic>> GetCommentsByPostId(long postId)
@@ -44,6 +46,7 @@ namespace VoiceMap_API.Repositories
                 })
                 .ToListAsync();
 
+             
             return comments.Cast<dynamic>().ToList();
         }
 
@@ -59,6 +62,17 @@ namespace VoiceMap_API.Repositories
 
             _context.PostComments.Add(newComment);
             await _context.SaveChangesAsync();
+
+            var user = await _context.UserProfiles
+             .Where(up => up.UserId == userId)
+             .Select(up => up.FullName)
+             .FirstOrDefaultAsync();
+
+            string message = !string.IsNullOrEmpty(user)
+                ? $"{user} commented on your post"
+                : "Someone commented on your post";
+
+            await AppClasses.Methods.SendPostNotificationAsync(postId, userId, typeId: 2, message, _context: _context, _Inotification: _Inotification, Convert.ToInt32(newComment.Id));
 
             return await GetCommentsByPostId(postId);
         }

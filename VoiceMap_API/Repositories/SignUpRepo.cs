@@ -30,7 +30,7 @@ namespace VoiceMap_API.Repositories
                 Email = BitConverter.ToString(EncryptEmail),
                 PasswordHash = Methods.HashPassword(userDto.PasswordHash),
                 IpAddress = userDto.ipAddress,
-                SecretKey = BitConverter.ToString(EncryptSecKet)
+                SecretKey = BitConverter.ToString(EncryptSecKet),
             };
 
             _context.Users.Add(user);

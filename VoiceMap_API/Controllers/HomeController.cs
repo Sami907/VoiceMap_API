@@ -34,11 +34,14 @@ namespace VoiceMap_API.Controllers
         private readonly IPostReactions _postReactions;
         private readonly IPostComments _postComments;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly AppDbContext.AppDbContext _context;
+
 
         protected APIResponse _response;
         public HomeController(ISignUp SignUpRepository,IUserVerification userVerification, IUserLoginLogs userLoginLogs,IUserProfiles userProfiles,
             IMapper mapper,IExpertiseType expertiseType,IProfileType profileType,IUserSecuritySettings userSecuritySettings, IReactionTypes reactionTypes,
-            IPosts posts,IPostCategories postCategories,IPostReactions postReactions,IPostComments postComments, IHttpContextAccessor httpContextAccessor)
+            IPosts posts,IPostCategories postCategories,IPostReactions postReactions,IPostComments postComments, IHttpContextAccessor httpContextAccessor,
+             AppDbContext.AppDbContext context)
         {
             _SignUpRepository = SignUpRepository;
             _IUserVerification = userVerification;
@@ -54,6 +57,7 @@ namespace VoiceMap_API.Controllers
             _postReactions = postReactions;
             _postComments = postComments;
             _httpContextAccessor = httpContextAccessor;
+            _context = context;
         }
 
         [HttpPost("saveUser")]
@@ -370,6 +374,15 @@ namespace VoiceMap_API.Controllers
                 if(result != null)
                 {
                     await _IUserSecSetting.SaveSecuritySettings(userSetting);
+
+                    var userRecord = await _SignUpRepository.GetUserById(Convert.ToInt32(profileDTO.Profile.UserId));
+                    if(userRecord != null)
+                    {
+                        userRecord.longitude = profileDTO.Profile.latitude;
+                        userRecord.latitude = profileDTO.Profile.longitude;
+                        _context.Users.Update(userRecord);
+                        await _context.SaveChangesAsync();
+                    }
                 }
 
                 var profileRecord = await _IUProfiles.GetUserProfileById(profileDTO.Profile.UserId);

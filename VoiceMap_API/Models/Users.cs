@@ -29,6 +29,8 @@ namespace VoiceMap_API.Models
         [MaxLength(45)]
         public string IpAddress { get; set; }
         public string SecretKey { get; set; }
+        public decimal latitude { get; set; }
+        public decimal longitude { get; set; }
 
         [NotMapped]
         public List<UserSecuritySettings> UserSecuritySettings { get; set; }

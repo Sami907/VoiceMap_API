@@ -26,6 +26,7 @@ namespace VoiceMap_API.Repositories
         {
             _context.UserProfiles.Add(up);
             await _context.SaveChangesAsync();
+
             return _context.UserProfiles.Where(w=> w.UserId == up.UserId).FirstOrDefaultAsync();
         }
 

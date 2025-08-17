@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using VoiceMap_API.Models;
+using VoiceMap_API.Repositories.Interface;
 
 namespace VoiceMap_API.AppClasses
 {
@@ -275,6 +278,54 @@ namespace VoiceMap_API.AppClasses
             string datePart = DateTime.Now.ToString("yyyyMMdd");
             string randomPart = GenerateRandomString(8);
             return $"{origin}/main/{datePart}{randomPart}";
+        }
+
+        public static async Task SendPostNotificationAsync(
+         long postId,
+         long actorUserId,
+         int typeId,
+         string message,
+         AppDbContext.AppDbContext _context,
+         INotifications _Inotification, int commentId)
+        {
+            var postOwnerId = await _context.Posts
+                .Where(p => p.Id == postId)
+                .Select(p => p.userId)
+                .FirstOrDefaultAsync();
+
+            if (postOwnerId == 0 || postOwnerId == actorUserId)
+                return;
+
+            var existingNotif = await _context.Notifications.FirstOrDefaultAsync(n =>
+                n.recipient_user_id == postOwnerId &&
+                n.post_id == postId &&
+                n.typId == typeId
+            );
+
+            if (existingNotif != null)
+            {
+                existingNotif.message = message;
+                existingNotif.is_read = false;
+                existingNotif.created_at = DateTime.UtcNow;
+                _context.Notifications.Update(existingNotif);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                var notification = new Notifications
+                {
+                    recipient_user_id = postOwnerId,
+                    reactor_user_id = Convert.ToInt32(actorUserId),
+                    post_id = Convert.ToInt32(postId),
+                    comment_id = commentId,
+                    typId = typeId,
+                    message = message,
+                    is_read = false,
+                    created_at = DateTime.UtcNow
+                };
+
+                await _Inotification.AddNotificationAsync(notification);
+            }
         }
     }
 }
