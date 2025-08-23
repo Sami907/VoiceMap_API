@@ -378,8 +378,8 @@ namespace VoiceMap_API.Controllers
                     var userRecord = await _SignUpRepository.GetUserById(Convert.ToInt32(profileDTO.Profile.UserId));
                     if(userRecord != null)
                     {
-                        userRecord.longitude = profileDTO.Profile.latitude;
-                        userRecord.latitude = profileDTO.Profile.longitude;
+                        userRecord.longitude = profileDTO.Profile.longitude;
+                        userRecord.latitude = profileDTO.Profile.latitude;
                         _context.Users.Update(userRecord);
                         await _context.SaveChangesAsync();
                     }
