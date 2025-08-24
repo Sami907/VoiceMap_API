@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using VoiceMap_API.AppClasses;
 using VoiceMap_API.Models;
 using VoiceMap_API.Repositories.Interface;
 
@@ -15,11 +17,15 @@ namespace VoiceMap_API.Repositories
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly AppDbContext.AppDbContext _context;
         private readonly INotifications _Inotification;
-        public PostCommentsRepo(AppDbContext.AppDbContext context, IHttpContextAccessor httpContextAccessor, INotifications Inotification)
+        private readonly IHubContext<NotificationHub> _hubContext;
+
+        public PostCommentsRepo(AppDbContext.AppDbContext context, IHttpContextAccessor httpContextAccessor, INotifications Inotification,
+            IHubContext<NotificationHub> hubContext)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
             _Inotification = Inotification;
+            _hubContext = hubContext;
         }
 
         private async Task<List<dynamic>> GetCommentsByPostId(long postId)
@@ -72,7 +78,8 @@ namespace VoiceMap_API.Repositories
                 ? $"{user} commented on your post"
                 : "Someone commented on your post";
 
-            await AppClasses.Methods.SendPostNotificationAsync(postId, userId, typeId: 2, message, _context: _context, _Inotification: _Inotification, Convert.ToInt32(newComment.Id));
+            await AppClasses.Methods.SendPostNotificationAsync(postId, userId, typeId: 2, message, _context: _context, _Inotification: _Inotification
+                , Convert.ToInt32(newComment.Id), _hubContext);
 
             return await GetCommentsByPostId(postId);
         }

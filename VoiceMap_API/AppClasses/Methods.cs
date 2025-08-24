@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -286,7 +287,7 @@ namespace VoiceMap_API.AppClasses
          int typeId,
          string message,
          AppDbContext.AppDbContext _context,
-         INotifications _Inotification, int commentId)
+         INotifications _Inotification, int commentId, IHubContext<NotificationHub> _hubContext)
         {
             var postOwnerId = await _context.Posts
                 .Where(p => p.Id == postId)
@@ -326,6 +327,14 @@ namespace VoiceMap_API.AppClasses
 
                 await _Inotification.AddNotificationAsync(notification);
             }
+
+            await _hubContext.Clients.User(postOwnerId.ToString()).SendAsync("ReceiveNotification", new
+            {
+                PostId = postId,
+                Message = message,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            });
         }
 
         public static async Task SendSuggestionNotificationAsync(
@@ -333,8 +342,7 @@ namespace VoiceMap_API.AppClasses
             long actorUserId,
             int typeId,
             string message,
-            AppDbContext.AppDbContext _context,
-            INotifications _Inotification)
+            INotifications _Inotification, IHubContext<NotificationHub> _hubContext)
         {
             var notification = new Notifications
             {
@@ -349,6 +357,14 @@ namespace VoiceMap_API.AppClasses
             };
 
             await _Inotification.AddNotificationAsync(notification);
+
+            await _hubContext.Clients.User(recipientUserId.ToString()).SendAsync("ReceiveNotification", new
+            {
+                PostId = 0,
+                Message = message,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            });
         }
     }
 }

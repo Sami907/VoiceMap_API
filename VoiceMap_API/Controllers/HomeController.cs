@@ -9,6 +9,7 @@ using AutoMapper;
 using BookPlazaAPI.AppClasses;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using VoiceMap_API.AppClasses;
 using VoiceMap_API.Models;
@@ -38,12 +39,13 @@ namespace VoiceMap_API.Controllers
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly AppDbContext.AppDbContext _context;
         private readonly INotifications _notifications;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
         protected APIResponse _response;
         public HomeController(ISignUp SignUpRepository,IUserVerification userVerification, IUserLoginLogs userLoginLogs,IUserProfiles userProfiles,
             IMapper mapper,IExpertiseType expertiseType,IProfileType profileType,IUserSecuritySettings userSecuritySettings, IReactionTypes reactionTypes,
             IPosts posts,IPostCategories postCategories,IPostReactions postReactions,IPostComments postComments, IHttpContextAccessor httpContextAccessor,
-             AppDbContext.AppDbContext context, INotifications notifications)
+             AppDbContext.AppDbContext context, INotifications notifications, IHubContext<NotificationHub> hubContext)
         {
             _SignUpRepository = SignUpRepository;
             _IUserVerification = userVerification;
@@ -61,6 +63,7 @@ namespace VoiceMap_API.Controllers
             _httpContextAccessor = httpContextAccessor;
             _context = context;
             _notifications = notifications;
+            _hubContext = hubContext;
         }
 
         [HttpPost("saveUser")]
@@ -403,8 +406,8 @@ namespace VoiceMap_API.Controllers
                                 actorUserId: currentUserId,
                                 typeId: 3,
                                 message: "A familiar face just joined! You might recognize them.",
-                                _context,
-                                _notifications
+                                _notifications,
+                                _hubContext: _hubContext
                             );
                         }
                     }

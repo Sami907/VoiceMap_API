@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using VoiceMap_API.AppClasses;
 using VoiceMap_API.Models;
 using VoiceMap_API.Repositories.Interface;
 
@@ -15,11 +17,15 @@ namespace VoiceMap_API.Repositories
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly AppDbContext.AppDbContext _context;
         private readonly INotifications _Inotification;
-        public PostReactionsRepo(AppDbContext.AppDbContext context, IHttpContextAccessor httpContextAccessor, INotifications notification)
+        private readonly IHubContext<NotificationHub> _hubContext;
+
+        public PostReactionsRepo(AppDbContext.AppDbContext context, IHttpContextAccessor httpContextAccessor, INotifications notification,
+            IHubContext<NotificationHub> hubContext)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
             _Inotification = notification;
+            _hubContext = hubContext;
         }
 
         public async Task<IEnumerable<dynamic>> SaveNGetReaction(long postId, long userId, int reactionId)
@@ -113,7 +119,8 @@ namespace VoiceMap_API.Repositories
                     message,
                     _context,
                     _Inotification,
-                    commentId:0
+                    commentId:0,
+                    _hubContext
                 );
             }
             return finalReactions;

@@ -8,6 +8,12 @@ using VoiceMap_API.Repositories;
 using VoiceMap_API.Repositories.Interface;
 using AutoMapper;
 using VoiceMap_API.Models;
+using Microsoft.AspNetCore.SignalR;
+using VoiceMap_API.AppClasses;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Threading.Tasks;
 
 namespace VoiceMap_API
 {
@@ -22,6 +28,43 @@ namespace VoiceMap_API
 
         public void ConfigureServices(IServiceCollection services)
         {
+            var key = Encoding.ASCII.GetBytes("mLvcPoWKSTQi1fCiqqCrpBvd3mTTvvzB"); 
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.RequireHttpsMetadata = false;
+                options.SaveToken = true;
+
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                    var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                path.StartsWithSegments("/notificationHub"))
+                            {
+                                context.Token = accessToken;
+                            }
+
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
+
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAngularDevClient",
@@ -31,13 +74,13 @@ namespace VoiceMap_API
                                .AllowAnyMethod()
                                .AllowAnyHeader()
                                 .AllowCredentials();
-            });
+                    });
             });
 
             services.AddControllers();
             services.AddAutoMapper(typeof(Startup));
             services.AddSwaggerGen();
-
+            
             services.AddDbContext<AppDbContext.AppDbContext>(options =>
             options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddHttpContextAccessor();
@@ -54,6 +97,9 @@ namespace VoiceMap_API
             services.AddScoped<IPostReactions, PostReactionsRepo>();
             services.AddScoped<IPostComments, PostCommentsRepo>();
             services.AddScoped<INotifications, NotificationRepo>();
+            services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
+            services.AddSignalR();
+
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -75,6 +121,8 @@ namespace VoiceMap_API
 
             app.UseRouting();
 
+            app.UseAuthentication();
+
             app.UseAuthorization();
 
             app.UseStaticFiles();
@@ -82,6 +130,7 @@ namespace VoiceMap_API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<NotificationHub>("/notificationHub");
             });
         }
     }
