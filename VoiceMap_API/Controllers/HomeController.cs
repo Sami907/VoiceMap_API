@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using AutoMapper;
 using BookPlazaAPI.AppClasses;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using VoiceMap_API.AppClasses;
 using VoiceMap_API.Models;
 using VoiceMap_API.Repositories;
@@ -35,13 +37,13 @@ namespace VoiceMap_API.Controllers
         private readonly IPostComments _postComments;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly AppDbContext.AppDbContext _context;
-
+        private readonly INotifications _notifications;
 
         protected APIResponse _response;
         public HomeController(ISignUp SignUpRepository,IUserVerification userVerification, IUserLoginLogs userLoginLogs,IUserProfiles userProfiles,
             IMapper mapper,IExpertiseType expertiseType,IProfileType profileType,IUserSecuritySettings userSecuritySettings, IReactionTypes reactionTypes,
             IPosts posts,IPostCategories postCategories,IPostReactions postReactions,IPostComments postComments, IHttpContextAccessor httpContextAccessor,
-             AppDbContext.AppDbContext context)
+             AppDbContext.AppDbContext context, INotifications notifications)
         {
             _SignUpRepository = SignUpRepository;
             _IUserVerification = userVerification;
@@ -58,6 +60,7 @@ namespace VoiceMap_API.Controllers
             _postComments = postComments;
             _httpContextAccessor = httpContextAccessor;
             _context = context;
+            _notifications = notifications;
         }
 
         [HttpPost("saveUser")]
@@ -382,6 +385,28 @@ namespace VoiceMap_API.Controllers
                         userRecord.latitude = profileDTO.Profile.latitude;
                         _context.Users.Update(userRecord);
                         await _context.SaveChangesAsync();
+                    }
+
+                    var currentUserId = profileDTO.Profile.UserId;
+                    var currentUser = await _context.Users.FindAsync(currentUserId);
+
+                    if (currentUser != null && !string.IsNullOrEmpty(currentUser.IpAddress))
+                    {
+                        var otherUsers = await _context.Users
+                            .Where(u => u.IpAddress == currentUser.IpAddress && u.Id != currentUserId)
+                            .ToListAsync();
+
+                        foreach (var otherUser in otherUsers)
+                        {
+                            await Methods.SendSuggestionNotificationAsync(
+                                recipientUserId: otherUser.Id,
+                                actorUserId: currentUserId,
+                                typeId: 3,
+                                message: "A familiar face just joined! You might recognize them.",
+                                _context,
+                                _notifications
+                            );
+                        }
                     }
                 }
 

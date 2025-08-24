@@ -39,24 +39,35 @@ namespace VoiceMap_API.Repositories
                 .ToListAsync();
 
             var reactorUserIds = notifications.Select(n => n.reactor_user_id).Distinct().ToList();
-            var postIds = notifications.Where(n => n.post_id.HasValue).Select(n => n.post_id.Value).Distinct().ToList();
+            var postIds = notifications
+                .Where(n => n.post_id.HasValue && n.post_id.Value != 0)
+                .Select(n => n.post_id.Value)
+                .Distinct()
+                .ToList();
 
-            var users = await _context.UserProfiles
-                .Where(u => reactorUserIds.Contains(Convert.ToInt32(u.UserId)))
-                .ToDictionaryAsync(u => u.UserId);
+            var users = await (from u in _context.UserProfiles
+                               join usr in _context.Users
+                               on u.UserId equals usr.Id
+                               where reactorUserIds.Contains(Convert.ToInt32(u.UserId)) &&
+                                     usr.IsActivated == true &&
+                                     usr.IsDeleted == false
+                               select u)
+                      .ToDictionaryAsync(u => u.UserId);
 
             var posts = await _context.Posts
                 .Where(p => postIds.Contains(Convert.ToInt32(p.Id)))
                 .ToDictionaryAsync(p => p.Id);
 
-            var result = notifications.Select(n => new
+            var result = notifications.Where(n => users.ContainsKey(n.reactor_user_id)).Select(n => new
             {
                 NotificationId = n.Id,
                 Message = n.message,
                 IsRead = n.is_read,
                 CreatedAt = n.created_at,
                 PostId = n.post_id,
-                PostUrl = posts[n.post_id.Value].PostUrl,
+                PostUrl = (n.post_id.HasValue && n.post_id.Value != 0 && posts.ContainsKey(n.post_id.Value))
+                  ? posts[n.post_id.Value].PostUrl
+                  : null,
                 typeId = n.typId,
                 commentId = n.comment_id,
                 ReactorUser = users.ContainsKey(n.reactor_user_id) ? new

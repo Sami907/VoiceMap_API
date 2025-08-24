@@ -327,5 +327,28 @@ namespace VoiceMap_API.AppClasses
                 await _Inotification.AddNotificationAsync(notification);
             }
         }
+
+        public static async Task SendSuggestionNotificationAsync(
+            long recipientUserId,
+            long actorUserId,
+            int typeId,
+            string message,
+            AppDbContext.AppDbContext _context,
+            INotifications _Inotification)
+        {
+            var notification = new Notifications
+            {
+                recipient_user_id = Convert.ToInt32(recipientUserId),
+                reactor_user_id = Convert.ToInt32(actorUserId),
+                post_id = null,
+                comment_id = null,
+                typId = typeId,
+                message = message,
+                is_read = false,
+                created_at = DateTime.UtcNow
+            };
+
+            await _Inotification.AddNotificationAsync(notification);
+        }
     }
 }
