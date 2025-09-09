@@ -13,5 +13,6 @@ namespace VoiceMap_API.Repositories.Interface
         Task <bool> DeletePostWithDependencies(long postId);
         Task<dynamic> GetPostByPostUrl(string postUrl, int userId);
         Task<dynamic> GetPostByCategory(int categoryId, int userId);
+        Task<dynamic> GetPostByQueryParam(string query, int userId, int skip = 0, int take = 20);
     }
 }

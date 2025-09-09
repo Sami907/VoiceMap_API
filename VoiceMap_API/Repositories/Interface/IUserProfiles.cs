@@ -13,5 +13,6 @@ namespace VoiceMap_API.Repositories.Interface
         Task <dynamic> GetUserProfileById(long userId);
         Task <dynamic> UpdateProfilePhoto(UpdatePhotoDTO dto);
         Task<bool> UpdateProfileInfo(UpdateUserProfileInfoDTO dto);
+        Task<dynamic> SearchProfiles(string query, int userId, int skip = 0, int take = 20);
     }
 }

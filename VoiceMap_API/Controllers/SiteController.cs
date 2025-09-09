@@ -23,13 +23,15 @@ namespace VoiceMap_API.Controllers
         private readonly IUserProfiles _IUProfiles;
         private readonly IMapper _mapper;
         private readonly INotifications _notifications;
+        private readonly IPosts _iPost;
 
         protected APIResponse _response;
-        public SiteController(IMapper mapper, IUserProfiles userProfiles, INotifications notifications)
+        public SiteController(IMapper mapper, IUserProfiles userProfiles, INotifications notifications, IPosts posts)
         {
             _IUProfiles = userProfiles;
             _mapper = mapper;
             _notifications = notifications;
+            _iPost = posts;
         }
 
         [HttpPut("updateUserPhoto")]
@@ -147,6 +149,50 @@ namespace VoiceMap_API.Controllers
                 response.Result = result;
                 response.Count = result.Count;
                 response.Messages = new List<string> { "updated is read." };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.ErrorMessages = new List<string> { ex.Message };
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            }
+        }
+
+        [HttpGet("searchProfilesByQueryParam")]
+        public async Task<ActionResult<APIResponse>> SearchProfiles(string query, int userId, int skip = 0, int take = 20)
+        {
+            var response = new APIResponse();
+            try
+            {
+                var result = await _IUProfiles.SearchProfiles(query, userId, skip, take);
+                response.IsSuccess = true;
+                response.Result = result;
+                response.Count = result.Count;
+                response.Messages = new List<string> { "successfull" };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.ErrorMessages = new List<string> { ex.Message };
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            }
+        }
+
+        [HttpGet("searchPostByQueryParam")]
+        public async Task<ActionResult<APIResponse>> searchPost(string query, int userId, int skip = 0, int take = 20)
+        {
+            var response = new APIResponse();
+            try
+            {
+                var result = await _iPost.GetPostByQueryParam(query, userId, skip, take);
+                response.IsSuccess = true;
+                response.Result = result;
+                response.Count = result.Count;
+                response.Messages = new List<string> { "successfull" };
                 return Ok(response);
             }
             catch (Exception ex)

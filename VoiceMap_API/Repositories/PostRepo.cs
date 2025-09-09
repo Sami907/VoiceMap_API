@@ -225,5 +225,18 @@ namespace VoiceMap_API.Repositories
 
             return posts.FirstOrDefault();
         }
+
+        public async Task<dynamic> GetPostByQueryParam(string query, int userId, int skip = 0, int take = 20)
+        {
+            var postsQuery = _context.Posts
+                .Where(p => p.Content.Contains(query))  
+                .OrderByDescending(p => p.PostTime); 
+
+            var pagedPosts = postsQuery.Skip(skip).Take(take);
+            var posts = await GetPostsByQuery(pagedPosts, userId);
+
+            return posts; 
+        }
+
     }
 }

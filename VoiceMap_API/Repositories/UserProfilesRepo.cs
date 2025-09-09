@@ -171,5 +171,30 @@ namespace VoiceMap_API.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<dynamic> SearchProfiles(string query, int userId, int skip = 0, int take = 20)
+        {
+            var scheme = _httpContextAccessor.HttpContext.Request.Scheme;
+            var host = _httpContextAccessor.HttpContext.Request.Host;
+
+            var profiles = await _context.UserProfiles
+                .Where(u => u.FullName.Contains(query) && u.UserId != userId)
+                .OrderBy(u => u.Id) 
+                .Skip(skip)
+                .Take(take)
+                .Select(u => new
+                {
+                    id = u.Id,
+                    userId = u.UserId,
+                    FullName = u.FullName,
+                    Bio = u.Bio,
+                    ProfilePicture = u.ProfilePictureUrl != null
+                        ? $"{scheme}://{host}/User/ProfilePictures/{Path.GetFileName(u.ProfilePictureUrl)}"
+                        : null
+                })
+                .ToListAsync();
+
+            return profiles;
+        }
     }
 }
