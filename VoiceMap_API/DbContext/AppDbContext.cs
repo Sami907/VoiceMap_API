@@ -28,5 +28,6 @@ namespace VoiceMap_API.AppDbContext
         public DbSet<PostComments> PostComments { get; set; }
         public DbSet<PostReactions> PostReactions { get; set; }
         public DbSet<Notifications> Notifications { get; set; }
+        public DbSet<Groups> Groups { get; set; }
     }
 }

@@ -13,6 +13,7 @@ using System.Net.Mime;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VoiceMap_API.Models;
 using VoiceMap_API.Repositories.Interface;
@@ -365,6 +366,19 @@ namespace VoiceMap_API.AppClasses
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false
             });
+        }
+
+        public static string GenerateGroupUrl(string groupName)
+        {
+            string origin = GetOrigin();
+            string slug = GenerateSlug(groupName);
+            string randomPart = GenerateRandomString(6);
+            return $"{origin}/groups/{slug}-{randomPart}";
+        }
+
+        private static string GenerateSlug(string text)
+        {
+            return Regex.Replace(text.ToLower().Trim(), @"[^a-z0-9]+", "-");
         }
     }
 }

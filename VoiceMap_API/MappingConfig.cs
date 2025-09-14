@@ -15,7 +15,7 @@ namespace VoiceMap_API
             CreateMap<UserProfiles, ProfileDTO>().ReverseMap();
             CreateMap<UserSecuritySettings, UserSecuritySettingDTO>().ReverseMap();
             CreateMap<Posts, PostDTO>().ReverseMap();
+            CreateMap<Groups, GroupDTO>().ReverseMap();
         }
-           
     }
 }

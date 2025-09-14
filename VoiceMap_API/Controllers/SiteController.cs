@@ -24,14 +24,15 @@ namespace VoiceMap_API.Controllers
         private readonly IMapper _mapper;
         private readonly INotifications _notifications;
         private readonly IPosts _iPost;
-
+        private readonly IGroups _iGrp;
         protected APIResponse _response;
-        public SiteController(IMapper mapper, IUserProfiles userProfiles, INotifications notifications, IPosts posts)
+        public SiteController(IMapper mapper, IUserProfiles userProfiles, INotifications notifications, IPosts posts, IGroups iGrp)
         {
             _IUProfiles = userProfiles;
             _mapper = mapper;
             _notifications = notifications;
             _iPost = posts;
+            _iGrp = iGrp;
         }
 
         [HttpPut("updateUserPhoto")]
@@ -202,6 +203,39 @@ namespace VoiceMap_API.Controllers
                 response.StatusCode = HttpStatusCode.InternalServerError;
                 return StatusCode((int)HttpStatusCode.InternalServerError, response);
             }
+        }
+
+        [HttpPost("CreateAndGetGroup")]
+        public async Task<ActionResult<APIResponse>> CreateGroup([FromForm] GroupDTO grpDTO)
+        {
+            var response = new APIResponse();
+            try
+            {
+                var profileImage = await Methods.UploadFileAsync(grpDTO.GroupPic == null ? null : grpDTO.GroupPic, "User/GroupProfilePhotos");
+                var voice = await Methods.UploadFileAsync(grpDTO.CoverPhoto == null ? null : grpDTO.CoverPhoto, "User/GroupCoverPhotos");
+
+                var group = _mapper.Map<Groups>(grpDTO);
+
+                group.GroupPic = profileImage;
+                group.CoverPhoto = voice;
+
+                group.GroupUrl = Methods.GenerateGroupUrl(grpDTO.GroupName);
+
+                await _iGrp.CreateGroup(group);
+
+                response.IsSuccess = true;
+                response.Result = null;
+                response.Messages = new List<string> { "Group created successfully!" };
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.ErrorMessages = new List<string> { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            }
+
+            return Ok(response);
         }
     }
 }
