@@ -237,6 +237,5 @@ namespace VoiceMap_API.Repositories
 
             return posts; 
         }
-
     }
 }

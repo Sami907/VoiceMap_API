@@ -205,7 +205,7 @@ namespace VoiceMap_API.Controllers
             }
         }
 
-        [HttpPost("CreateAndGetGroup")]
+        [HttpPost("CreateGroup")]
         public async Task<ActionResult<APIResponse>> CreateGroup([FromForm] GroupDTO grpDTO)
         {
             var response = new APIResponse();
@@ -236,6 +236,49 @@ namespace VoiceMap_API.Controllers
             }
 
             return Ok(response);
+        }
+
+        [HttpGet("getCurrentUserGroups")]
+        public async Task<ActionResult<APIResponse>> GetUserGroups(int userId)
+        {
+            var response = new APIResponse();
+            try
+            {
+                var result = await _iGrp.GetCurrentUserGroup(userId);
+                response.IsSuccess = true;
+                response.Result = result;
+                response.Messages = new List<string> { "successfull" };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.ErrorMessages = new List<string> { ex.Message };
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            }
+        }
+
+        [HttpGet("searchGroupsByQueryParam")]
+        public async Task<ActionResult<APIResponse>> SearchGroups(string query, int userId, int skip = 0, int take = 20)
+        {
+            var response = new APIResponse();
+            try
+            {
+                var result = await _iGrp.SearchGroups(query, userId, skip, take);
+                response.IsSuccess = true;
+                response.Result = result;
+                response.Count = result.Count;
+                response.Messages = new List<string> { "successfull" };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.ErrorMessages = new List<string> { ex.Message };
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            }
         }
     }
 }
