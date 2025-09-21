@@ -11,5 +11,6 @@ namespace VoiceMap_API.Repositories.Interface
         Task CreateGroup(Groups grp);
         Task<IEnumerable<dynamic>> GetCurrentUserGroup(int userId);
         Task<dynamic> SearchGroups(string query, int userId, int skip = 0, int take = 20);
+        Task<dynamic> GetGroupByUrl(string postUrl, int userId);
     }
 }

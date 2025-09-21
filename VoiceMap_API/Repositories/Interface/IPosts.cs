@@ -14,5 +14,6 @@ namespace VoiceMap_API.Repositories.Interface
         Task<dynamic> GetPostByPostUrl(string postUrl, int userId);
         Task<dynamic> GetPostByCategory(int categoryId, int userId);
         Task<dynamic> GetPostByQueryParam(string query, int userId, int skip = 0, int take = 20);
+        Task<IEnumerable<dynamic>> GetPostsByQuery(IQueryable<Posts> postsQuery, int userId);
     }
 }

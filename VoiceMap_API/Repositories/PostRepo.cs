@@ -32,12 +32,12 @@ namespace VoiceMap_API.Repositories
 
             if (applyIdFilter)
             {
-                postsQuery = postsQuery.Where(p => p.userId == userId);
+                postsQuery = postsQuery.Where(p => p.userId == userId && p.groupid == 0);
             }
             return await GetPostsByQuery(postsQuery, userId);
         }
 
-        private async Task<IEnumerable<dynamic>> GetPostsByQuery(IQueryable<Posts> postsQuery, int userId)
+        public async Task<IEnumerable<dynamic>> GetPostsByQuery(IQueryable<Posts> postsQuery, int userId)
         {
             var scheme = _httpContextAccessor.HttpContext.Request.Scheme;
             var host = _httpContextAccessor.HttpContext.Request.Host.Value;
@@ -212,7 +212,7 @@ namespace VoiceMap_API.Repositories
         }
         public async Task<dynamic> GetPostByPostUrl(string postUrl, int userId)
         {
-            var postsQuery = _context.Posts.Where(p => p.PostUrl == postUrl);
+            var postsQuery = _context.Posts.Where(p => p.PostUrl == postUrl && p.groupid == 0);
             var posts = await GetPostsByQuery(postsQuery, userId);
 
             return posts.FirstOrDefault();
@@ -220,7 +220,7 @@ namespace VoiceMap_API.Repositories
 
         public async Task<dynamic> GetPostByCategory(int categoryId, int userId)
         {
-            var postsQuery = _context.Posts.Where(p => p.categoryId == categoryId);
+            var postsQuery = _context.Posts.Where(p => p.categoryId == categoryId && p.groupid == 0);
             var posts = await GetPostsByQuery(postsQuery, userId);
 
             return posts.FirstOrDefault();
@@ -229,7 +229,7 @@ namespace VoiceMap_API.Repositories
         public async Task<dynamic> GetPostByQueryParam(string query, int userId, int skip = 0, int take = 20)
         {
             var postsQuery = _context.Posts
-                .Where(p => p.Content.Contains(query))  
+                .Where(p => p.Content.Contains(query) && p.groupid == 0)  
                 .OrderByDescending(p => p.PostTime); 
 
             var pagedPosts = postsQuery.Skip(skip).Take(take);

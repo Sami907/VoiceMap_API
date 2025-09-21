@@ -26,13 +26,15 @@ namespace VoiceMap_API.Controllers
         private readonly IPosts _iPost;
         private readonly IGroups _iGrp;
         protected APIResponse _response;
-        public SiteController(IMapper mapper, IUserProfiles userProfiles, INotifications notifications, IPosts posts, IGroups iGrp)
+        private readonly IGroupMembers _iGrpMem;
+        public SiteController(IMapper mapper, IUserProfiles userProfiles, INotifications notifications, IPosts posts, IGroups iGrp, IGroupMembers iGrpMem)
         {
             _IUProfiles = userProfiles;
             _mapper = mapper;
             _notifications = notifications;
             _iPost = posts;
             _iGrp = iGrp;
+            _iGrpMem = iGrpMem;
         }
 
         [HttpPut("updateUserPhoto")]
@@ -270,6 +272,63 @@ namespace VoiceMap_API.Controllers
                 response.Result = result;
                 response.Count = result.Count;
                 response.Messages = new List<string> { "successfull" };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.ErrorMessages = new List<string> { ex.Message };
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            }
+        }
+
+        [HttpGet("getGroupbyUrl")]
+        public async Task<ActionResult<APIResponse>> GetGroupbyUrl(int userId, string url)
+        {
+            var response = new APIResponse();
+            try
+            {
+                var result = await _iGrp.GetGroupByUrl(url, userId);
+                response.IsSuccess = true;
+                response.Result = result;
+                response.Messages = new List<string> { "success" };
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.StatusCode = HttpStatusCode.InternalServerError;
+                response.ErrorMessages = new List<string> { ex.Message };
+                return StatusCode((int)HttpStatusCode.InternalServerError, response);
+            }
+
+            return Ok(response);
+        }
+
+        [HttpPost("JoinGroup")]
+        public async Task<ActionResult<APIResponse>> JoinGroup(int groupId, int userId)
+        {
+            var response = new APIResponse();
+            try
+            {
+                var status = await _iGrpMem.ToggleGroupMembership(userId, groupId);
+
+                if (status == 1)
+                {
+                    response.IsSuccess = true;
+                    response.Messages = new List<string> { "You have successfully joined the group" };
+                }
+                else if (status == 2)
+                {
+                    response.IsSuccess = true;
+                    response.Messages = new List<string> { "You have left the group" };
+                }
+                else
+                {
+                    response.IsSuccess = false;
+                    response.Messages = new List<string> { "Unknown membership status" };
+                }
+
                 return Ok(response);
             }
             catch (Exception ex)

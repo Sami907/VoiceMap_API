@@ -98,6 +98,7 @@ namespace VoiceMap_API
             services.AddScoped<IPostComments, PostCommentsRepo>();
             services.AddScoped<INotifications, NotificationRepo>();
             services.AddScoped<IGroups, GroupsRepo>();
+            services.AddScoped<IGroupMembers, GroupMembersRepo>();
             services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
             services.AddSignalR();
 
