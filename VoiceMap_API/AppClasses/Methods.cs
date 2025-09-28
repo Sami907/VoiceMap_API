@@ -373,7 +373,7 @@ namespace VoiceMap_API.AppClasses
             string origin = GetOrigin();
             string slug = GenerateSlug(groupName);
             string randomPart = GenerateRandomString(6);
-            return $"{origin}/groups/{slug}-{randomPart}";
+            return $"{origin}/main/groups/{slug}-{randomPart}";
         }
 
         private static string GenerateSlug(string text)

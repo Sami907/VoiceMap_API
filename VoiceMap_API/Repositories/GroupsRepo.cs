@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using VoiceMap_API.AppClasses;
 using VoiceMap_API.Models;
 using VoiceMap_API.Repositories.Interface;
 
@@ -79,44 +80,63 @@ namespace VoiceMap_API.Repositories
             return groups;
         }
 
-        public async Task<dynamic> GetGroupByUrl(string postUrl, int userId)
+        public async Task<dynamic> GetGroupByUrl(string grpUrl, int userId)
         {
             var scheme = _httpContextAccessor.HttpContext.Request.Scheme;
             var host = _httpContextAccessor.HttpContext.Request.Host;
 
-            var group = await _context.Groups.Where(p => p.GroupUrl == postUrl).FirstOrDefaultAsync();
-            if (group != null)
+            var fullGroupUrl = $"{Methods.GetOrigin()}/main/groups/{grpUrl}";
+
+            var groupWithCategory = await (from g in _context.Groups
+                                           join gc in _context.PostCategories on g.GroupCategory equals gc.Id
+                                           where g.GroupUrl == fullGroupUrl
+                                           select new
+                                           {
+                                               g.Id,
+                                               g.UserId,
+                                               g.GroupName,
+                                               g.Description,
+                                               g.PrivacySetting,
+                                               GroupCategoryId = gc.Id,
+                                               GroupCategoryName = gc.Name,
+                                               g.CreatedAt,
+                                               g.GroupUrl,
+                                               g.GroupPic,
+                                               g.CoverPhoto
+                                           }).FirstOrDefaultAsync();
+
+            if (groupWithCategory != null)
             {
                 var postsQuery = _context.Posts
-                    .Where(p => p.groupid == group.Id)
+                    .Where(p => p.groupid == groupWithCategory.Id)
                     .OrderByDescending(p => p.PostTime);
 
                 bool hasJoined = await _context.GroupMembers
-                    .AnyAsync(gm => gm.GroupId == group.Id && gm.UserId == userId);
+                    .AnyAsync(gm => gm.GroupId == groupWithCategory.Id && gm.UserId == userId);
 
                 int totalMembers = await _context.GroupMembers
-                    .CountAsync(gm => gm.GroupId == group.Id);
+                    .CountAsync(gm => gm.GroupId == groupWithCategory.Id);
 
                 var groupWithPhotos = new
                 {
-                    group.Id,
-                    group.UserId,
-                    group.GroupName,
-                    group.Description,
-                    group.PrivacySetting,
-                    group.GroupCategory,
-                    group.CreatedAt,
-                    group.GroupUrl,
-                    GroupProfilePhotoUrl = !string.IsNullOrEmpty(group.GroupPic)
-                        ? $"{scheme}://{host}/User/GroupProfilePhotos/{Path.GetFileName(group.GroupPic)}"
+                    groupWithCategory.Id,
+                    groupWithCategory.UserId,
+                    groupWithCategory.GroupName,
+                    groupWithCategory.Description,
+                    groupWithCategory.PrivacySetting,
+                    groupWithCategory.GroupCategoryId,
+                    groupWithCategory.GroupCategoryName,  // category name here
+                    groupWithCategory.CreatedAt,
+                    groupWithCategory.GroupUrl,
+                    GroupProfilePhotoUrl = !string.IsNullOrEmpty(groupWithCategory.GroupPic)
+                        ? $"{scheme}://{host}/User/GroupProfilePhotos/{Path.GetFileName(groupWithCategory.GroupPic)}"
                         : null,
-                    GroupCoverPhotoUrl = !string.IsNullOrEmpty(group.CoverPhoto)
-                        ? $"{scheme}://{host}/User/GroupCoverPhotos/{Path.GetFileName(group.CoverPhoto)}"
+                    GroupCoverPhotoUrl = !string.IsNullOrEmpty(groupWithCategory.CoverPhoto)
+                        ? $"{scheme}://{host}/User/GroupCoverPhotos/{Path.GetFileName(groupWithCategory.CoverPhoto)}"
                         : null,
                     hasJoined,
                     totalMembers,
                     posts = postsQuery != null ? await _pr.GetPostsByQuery(postsQuery, userId) : null
-
                 };
 
                 return groupWithPhotos;
