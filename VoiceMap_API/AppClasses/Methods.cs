@@ -288,7 +288,7 @@ namespace VoiceMap_API.AppClasses
          int typeId,
          string message,
          AppDbContext.AppDbContext _context,
-         INotifications _Inotification, int commentId, IHubContext<NotificationHub> _hubContext)
+         INotifications _Inotification, int commentId, IHubContext<NotificationHub> _hubContext, int groupId)
         {
             var postOwnerId = await _context.Posts
                 .Where(p => p.Id == postId)
@@ -323,7 +323,8 @@ namespace VoiceMap_API.AppClasses
                     typId = typeId,
                     message = message,
                     is_read = false,
-                    created_at = DateTime.UtcNow
+                    created_at = DateTime.UtcNow,
+                    groupId = groupId
                 };
 
                 await _Inotification.AddNotificationAsync(notification);
@@ -380,5 +381,60 @@ namespace VoiceMap_API.AppClasses
         {
             return Regex.Replace(text.ToLower().Trim(), @"[^a-z0-9]+", "-");
         }
+
+        public static async Task SendGroupNotificationAsync(
+            int actorUserId,
+            int recipientUserId,
+            int typeId,
+            string message,
+            AppDbContext.AppDbContext _context,
+            INotifications _notificationService,
+            IHubContext<NotificationHub> _hubContext,
+            int groupId)
+        {
+            if (recipientUserId == actorUserId)
+                return;
+
+            var existingNotif = await _context.Notifications.FirstOrDefaultAsync(n =>
+                n.recipient_user_id == recipientUserId &&
+                n.groupId == groupId &&
+                n.typId == typeId
+            );
+
+            if (existingNotif != null)
+            {
+                existingNotif.message = message;
+                existingNotif.is_read = false;
+                existingNotif.created_at = DateTime.UtcNow;
+                _context.Notifications.Update(existingNotif);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                var notification = new Notifications
+                {
+                    recipient_user_id = recipientUserId,
+                    reactor_user_id = actorUserId,
+                    post_id = 0,      
+                    comment_id = 0,    
+                    typId = typeId,
+                    message = message,
+                    is_read = false,
+                    created_at = DateTime.UtcNow,
+                    groupId = groupId
+                };
+
+                await _notificationService.AddNotificationAsync(notification);
+            }
+
+            await _hubContext.Clients.User(recipientUserId.ToString()).SendAsync("ReceiveNotification", new
+            {
+                GroupId = groupId,
+                Message = message,
+                CreatedAt = DateTime.UtcNow,
+                IsRead = false
+            });
+        }
+
     }
 }

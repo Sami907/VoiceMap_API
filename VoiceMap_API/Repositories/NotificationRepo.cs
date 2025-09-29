@@ -45,6 +45,12 @@ namespace VoiceMap_API.Repositories
                 .Distinct()
                 .ToList();
 
+            var groupIds = notifications
+                .Where(n => n.typId == 4 && n.groupId.HasValue && n.groupId.Value != 0)
+                .Select(n => n.groupId.Value)
+                .Distinct()
+                .ToList();
+
             var users = await (from u in _context.UserProfiles
                                join usr in _context.Users
                                on u.UserId equals usr.Id
@@ -52,13 +58,17 @@ namespace VoiceMap_API.Repositories
                                      usr.IsActivated == true &&
                                      usr.IsDeleted == false
                                select u)
-                      .ToDictionaryAsync(u => u.UserId);
+                          .ToDictionaryAsync(u => u.UserId);
 
             var posts = await _context.Posts
                 .Where(p => postIds.Contains(Convert.ToInt32(p.Id)))
                 .ToDictionaryAsync(p => p.Id);
 
-            var result = notifications.Where(n => users.ContainsKey(n.reactor_user_id)).Select(n => new
+            var groups = await _context.Groups
+                .Where(g => groupIds.Contains(Convert.ToInt32(g.Id)))
+                .ToDictionaryAsync(g => g.Id);
+
+            var result = notifications.Select(n => new
             {
                 NotificationId = n.Id,
                 Message = n.message,
@@ -70,14 +80,27 @@ namespace VoiceMap_API.Repositories
                   : null,
                 typeId = n.typId,
                 commentId = n.comment_id,
-                ReactorUser = users.ContainsKey(n.reactor_user_id) ? new
-                {
-                    Id = n.reactor_user_id,
-                    Name = users[n.reactor_user_id].FullName,
-                    Avatar = users[n.reactor_user_id].ProfilePictureUrl != null
-                        ? $"{scheme}://{host}/User/ProfilePictures/{Path.GetFileName(users[n.reactor_user_id].ProfilePictureUrl)}"
-                        : null
-                } : null
+                groupId = n.groupId,
+                groupUrl = (n.groupId.HasValue && n.groupId.Value != 0 && groups.ContainsKey(n.groupId.Value))
+                  ? groups[n.groupId.Value].GroupUrl
+                  : null,
+                ReactorUser = n.typId == 4 && n.groupId.HasValue && groups.ContainsKey(n.groupId.Value)
+                    ? new
+                    {
+                        Id = (int)groups[n.groupId.Value].Id,
+                        Name = groups[n.groupId.Value].GroupName,
+                        Avatar = !string.IsNullOrEmpty(groups[n.groupId.Value].GroupPic)
+                            ? $"{scheme}://{host}/User/GroupProfilePhotos/{Path.GetFileName(groups[n.groupId.Value].GroupPic)}"
+                            : null
+                    }
+                    : (users.ContainsKey(n.reactor_user_id) ? new
+                    {
+                        Id = n.reactor_user_id,
+                        Name = users[n.reactor_user_id].FullName,
+                        Avatar = users[n.reactor_user_id].ProfilePictureUrl != null
+                            ? $"{scheme}://{host}/User/ProfilePictures/{Path.GetFileName(users[n.reactor_user_id].ProfilePictureUrl)}"
+                            : null
+                    } : null)
             }).ToList<object>();
 
             return result;
@@ -115,6 +138,5 @@ namespace VoiceMap_API.Repositories
 
             return new List<dynamic>();
         }
-
     }
 }

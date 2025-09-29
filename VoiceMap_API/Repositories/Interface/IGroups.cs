@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using VoiceMap_API.Models;
+using VoiceMap_API.Repositories.DTO;
 
 namespace VoiceMap_API.Repositories.Interface
 {
@@ -12,5 +13,6 @@ namespace VoiceMap_API.Repositories.Interface
         Task<IEnumerable<dynamic>> GetCurrentUserGroup(int userId);
         Task<dynamic> SearchGroups(string query, int userId, int skip = 0, int take = 20);
         Task<dynamic> GetGroupByUrl(string grpUrl, int userId);
+        Task<bool> UpdateGroupInfo(UpdateGroupDTO dto);
     }
 }

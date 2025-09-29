@@ -120,7 +120,8 @@ namespace VoiceMap_API.Repositories
                     _context,
                     _Inotification,
                     commentId:0,
-                    _hubContext
+                    _hubContext,
+                    groupId:0
                 );
             }
             return finalReactions;

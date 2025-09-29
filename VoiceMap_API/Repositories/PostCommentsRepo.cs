@@ -79,7 +79,7 @@ namespace VoiceMap_API.Repositories
                 : "Someone commented on your post";
 
             await AppClasses.Methods.SendPostNotificationAsync(postId, userId, typeId: 2, message, _context: _context, _Inotification: _Inotification
-                , Convert.ToInt32(newComment.Id), _hubContext);
+                , Convert.ToInt32(newComment.Id), _hubContext, 0);
 
             return await GetCommentsByPostId(postId);
         }

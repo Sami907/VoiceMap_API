@@ -16,6 +16,7 @@ namespace VoiceMap_API.Models
         public string message { get; set; }
         public bool is_read { get; set; } = false;
         public DateTime created_at { get; set; } = DateTime.UtcNow;
-        
+        public int? groupId { get; set; }
+
     }
 }

@@ -32,7 +32,7 @@ namespace VoiceMap_API.Repositories
 
             if (applyIdFilter)
             {
-                postsQuery = postsQuery.Where(p => p.userId == userId && p.groupid == 0);
+                postsQuery = postsQuery.Where(p => p.userId == userId);
             }
             return await GetPostsByQuery(postsQuery, userId);
         }
@@ -61,7 +61,8 @@ namespace VoiceMap_API.Repositories
                     p.tagLocation,
                     p.categoryId,
                     p.userId,
-                    p.PostUrl
+                    p.PostUrl,
+                    groupid = (int?)p.groupid
                 })
                 .ToListAsync();
 
@@ -129,6 +130,16 @@ namespace VoiceMap_API.Repositories
                 .Where(pc => categoryIds.Contains(pc.Id))
                 .ToDictionaryAsync(pc => pc.Id);
 
+            var groupIds = posts.Select(p => p.groupid).Where(id => id.HasValue).Select(id => id.Value).Distinct().ToList();
+
+            var groups = await _context.Groups
+                            .Where(g => groupIds.Contains(Convert.ToInt32(g.Id)))
+                            .ToDictionaryAsync(g => g.Id);
+
+            var userJoinedGroupIds = await _context.GroupMembers
+                          .Where(ug => ug.UserId == userId)
+                          .Select(ug => ug.GroupId)
+                          .ToListAsync();
 
             var finalPosts = posts.Select(p => new
             {
@@ -187,7 +198,17 @@ namespace VoiceMap_API.Repositories
                 NewComment = "",
                 ShowComments = false,
                 UserId = p.userId,
-                postUrl = p.PostUrl
+                postUrl = p.PostUrl,
+                GroupId = p.groupid,
+                GroupName = (p.groupid.HasValue && groups.ContainsKey(p.groupid.Value)) ? groups[p.groupid.Value].GroupName : null,
+                GroupAvatar = (p.groupid.HasValue && groups.ContainsKey(p.groupid.Value) && groups[p.groupid.Value].GroupPic!= null)
+                ? $"{scheme}://{host}/User/GroupProfilePhotos/{Path.GetFileName(groups[p.groupid.Value].GroupPic)}"
+                : null,
+                GroupUrl = (p.groupid.HasValue && groups.ContainsKey(p.groupid.Value) && groups[p.groupid.Value].GroupUrl != null)
+                ? groups[p.groupid.Value].GroupUrl
+                : null,
+                IsUserMember = p.groupid.HasValue && userJoinedGroupIds.Contains(p.groupid.Value),
+
             }).ToList();
 
             return finalPosts;

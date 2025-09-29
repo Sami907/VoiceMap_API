@@ -306,32 +306,32 @@ namespace VoiceMap_API.Controllers
 
                         bool isSuccessfull = true;
 
-                        if (user.UserSecuritySettings.Count > 0)
-                        {
-                            isSuccessfull = user.UserSecuritySettings[0].TwoFactorAuth;
-                            if (isSuccessfull == true)
-                            {
-                                string otp = await _IUserVerification.UserVerification(Convert.ToInt32(user.Id));
-                                if (otp != "")
-                                {
-                                    var subject = "Your Voice Map Two-Factor Authentication Code";
+                        //if (user.UserSecuritySettings.Count > 0)
+                        //{
+                        //    isSuccessfull = user.UserSecuritySettings[0].SendEmailIfLoggedIn;
+                        //    if (isSuccessfull == true)
+                        //    {
+                        //        string otp = await _IUserVerification.UserVerification(Convert.ToInt32(user.Id));
+                        //        if (otp != "")
+                        //        {
+                        //            var subject = "Your Voice Map Two-Factor Authentication Code";
 
-                                    var message = $@"
-                                        Dear User,<br /><br />
-                                        As part of our commitment to keeping your <strong>Voice Map</strong> account secure, we use <strong>Two-Factor Authentication (2FA)</strong>.<br /><br />
-                                        To continue with your login, please enter the following <strong>6-digit verification code</strong> in the app:<br /><br />
-                                        <h2 style='letter-spacing: 3px;'>{otp}</h2><br />
-                                        This code is valid for <strong>1 minute</strong> and is required to complete your sign-in process. Please do not share this code with anyone.<br /><br />
-                                        If you did not attempt to log in, we recommend changing your password immediately or contacting our support team.<br /><br />
-                                        Thank you for helping us keep your Voice Map account secure.<br /><br />
-                                        Best regards,<br />
-                                        <strong>The Voice Map Team</strong>
-                                    ";
+                        //            var message = $@"
+                        //                Dear User,<br /><br />
+                        //                As part of our commitment to keeping your <strong>Voice Map</strong> account secure, we use <strong>Two-Factor Authentication (2FA)</strong>.<br /><br />
+                        //                To continue with your login, please enter the following <strong>6-digit verification code</strong> in the app:<br /><br />
+                        //                <h2 style='letter-spacing: 3px;'>{otp}</h2><br />
+                        //                This code is valid for <strong>1 minute</strong> and is required to complete your sign-in process. Please do not share this code with anyone.<br /><br />
+                        //                If you did not attempt to log in, we recommend changing your password immediately or contacting our support team.<br /><br />
+                        //                Thank you for helping us keep your Voice Map account secure.<br /><br />
+                        //                Best regards,<br />
+                        //                <strong>The Voice Map Team</strong>
+                        //            ";
 
-                                    await Methods.SendEmailAsync(decryptedEmail, subject, message);
-                                }
-                            }
-                        }
+                        //            await Methods.SendEmailAsync(decryptedEmail, subject, message);
+                        //        }
+                        //    }
+                        //}
 
                         long loginid = await _ILoginLogs.SaveLoginLogs(user.Id, isSuccessfull, loginDTO.ipAddress, loginDTO.deviceInfo);
 
